@@ -1,34 +1,39 @@
 set(blitz_LIB_SRCS globals.cpp)
-add_library(blitz SHARED ${blitz_LIB_SRCS})
 
-if (ENABLE_SERIALISATION)
-	set(Boost_USE_STATIC_LIBS        ON) # only find static libs
-	set(Boost_USE_MULTITHREADED      ON)
-	set(Boost_USE_STATIC_RUNTIME    OFF)
-    find_package(Boost COMPONENTS serialization)
-    if (Boost_SERIALIZATION_FOUND)
-        message(STATUS "Boost serialization library found. ${Boost_LIBRARIES}")
-    else()
-        message(WARNING "Boost serialization library not found !")
-    endif()
-	target_link_libraries (blitz
-		Boost::boost
-		${Boost_LIBRARIES}
-	)
-endif()
+if (BUILD_SHARED_LIBS)
+	add_library(blitz SHARED ${blitz_LIB_SRCS})
 
-add_dependencies(blitz generated-headers)
+	if (ENABLE_SERIALISATION)
+		set(Boost_USE_STATIC_LIBS        ON) # only find static libs
+		set(Boost_USE_MULTITHREADED      ON)
+		set(Boost_USE_STATIC_RUNTIME    OFF)
+		find_package(Boost COMPONENTS serialization)
+		if (Boost_SERIALIZATION_FOUND)
+			message(STATUS "Boost serialization library found. ${Boost_LIBRARIES}")
+		else()
+			message(WARNING "Boost serialization library not found !")
+		endif()
+		target_link_libraries (blitz
+			Boost::boost
+			${Boost_LIBRARIES}
+		)
+	endif()
 
-set_target_properties(blitz PROPERTIES
-                      VERSION ${blitz_VERSION}
-                      SOVERSION 0
-                      CLEAN_DIRECT_OUTPUT 1)
-if (WIN32 AND NOT MINGW)
+	add_dependencies(blitz generated-headers)
+
 	set_target_properties(blitz PROPERTIES
-						  IMPORT_SUFFIX ".dll.lib")
-endif()
+						  VERSION ${blitz_VERSION}
+						  SOVERSION 0
+						  CLEAN_DIRECT_OUTPUT 1)
+	if (WIN32 AND NOT MINGW)
+		set_target_properties(blitz PROPERTIES
+							  IMPORT_SUFFIX ".dll.lib")
+	endif()
 
-set(BLITZ_LIBS blitz)
+	set(BLITZ_LIBS blitz)
+else()
+	set(BLITZ_LIBS )
+endif()
 
 add_library(blitz-static STATIC ${blitz_LIB_SRCS})
 add_dependencies(blitz-static generated-headers)
