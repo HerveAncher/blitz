@@ -90,6 +90,7 @@ protected:
     template<class T> friend class boost::archive::detail::heap_allocation;
 #  endif
 #endif
+
     explicit MemoryBlock(sizeType items)
     {
       // pad the length to vecWidth, if not already done
@@ -226,12 +227,35 @@ protected:
     void deallocate();
 
 private:   // Disabled member functions
-  MemoryBlock(const MemoryBlock<T_type>&) { };
+  MemoryBlock(const MemoryBlock<T_type>&)
+  {
+        // Copy constructor has to be filled properly to init mutex
+        Init();
+  }
 
-  void operator=(const MemoryBlock<T_type>&) {};
+  void operator=(const MemoryBlock<T_type>&)
+  {
+        // Copy operator has to be filled properly to init mutex
+        Init();
+  }
 
   /** The default constructor is needed for serialization. */
-  MemoryBlock() {};
+  MemoryBlock()
+  {
+        // Standard constructor has to be filled properly to init mutex
+        Init();
+  }
+
+  void Init()
+  {
+        length_ = 0;
+        data_ = nullptr;
+        dataBlockAddress_ = nullptr;
+        references_ = 0;
+        BZ_MUTEX_INIT(mutex);
+        allocatedByUs_ = false;
+  }
+
 #ifdef BZ_HAVE_BOOST_SERIALIZATION
     friend class boost::serialization::access;
 
